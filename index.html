@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html> 
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Chat App</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            #zone_chat strong {
+                color: white;
+                background-color: black;
+                padding: 2px;
+            }
+        </style>
+    </head>
+    <body>
+       <h1>Real-Time Chat</h1>
+       <form action="/" method="POST" id="chat_form">
+           <input type="text" name="message" id="message" placeholder="Your message ..." 
+           size="50" autofocus>
+           <input type="submit" id="send_message" value="send">
+       </form>
+       <section id="chat_zone">
+
+       </section>
+        
+        <script src="http://code.jquery.com/jquery-1.10.1.min.js" async defer></script>
+        <script src="/socket.io/socket.io.js" async defer></script>
+        <script>
+            //Connecting to socket.io
+            let socket = io.connect('http://localhost:8080');
+            //The username is requested,sent to the server and displayed in the title
+            let username = prompt('What/s your username?');
+            socket.emit('new_client',username);
+            document.title = username + '-' + document.title;
+            //when a message is received,Its inserted in the page
+            socket.on('message',(data)=> {
+                insertMessage(data.username,data.message)
+            });
+            //when a new client connects the information is displayed
+            socket.on('new_client',(username) => {
+                $('#chat_zone').prepend('<p><em>' + username + 'has joined the chat!</em></p>')
+            });
+            //when the form is sent the message is sent and displayed on the page
+            $('#chat_form').submit(() => {
+                let message = $('#message').val(); //sends the message to others
+                socket.emit('message',message); // also displays the message on our page
+                insertMessage(username,message); //Empties the chat form and puts the focus back on it
+                $('#message').val('').focus(); // blocks 'classic' sending of form
+                return false;
+            });
+            //Adds a message to the page
+            let insertMessage = (username,message) => {
+                $('#chat_zone').prepend('<p><strong>' + username + '<strong>' + message + '</p>');
+            };
+
+        </script>
+    </body>
+</html>
